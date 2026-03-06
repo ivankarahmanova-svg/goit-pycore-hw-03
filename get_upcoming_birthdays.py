@@ -1,46 +1,56 @@
 from datetime import datetime, date, timedelta
 
-def get_upcoming_birthdays(users):
-    today = datetime.today().date()
-    end_date = today + timedelta(days=7)
 
-    result = []
+def get_birthday_this_year(birthday_date: date, year: int) -> date:
+    try:
+        return birthday_date.replace(year=year)
+    except ValueError:
+        return date(year, 3, 1)
+
+
+def get_upcoming_birthdays(users: list[dict[str, str]]) -> list[dict[str, str]]:
+    today: date = datetime.today().date()
+    end_date: date = today + timedelta(days=7)
+    result: list[dict[str, str]] = []
 
     for user in users:
-        # 1) Перетворюємо день народження з рядка у дату
-        birthday_date = datetime.strptime(user["birthday"], "%Y.%m.%d").date()
+        birthday_date: date = datetime.strptime(
+            user["birthday"], "%Y.%m.%d"
+        ).date()
 
-        # 2) Робимо день народження в цьому році
-        birthday_this_year = birthday_date.replace(year=today.year)
+        birthday_this_year: date = get_birthday_this_year(
+            birthday_date,
+            today.year
+        )
 
-        # 3) Якщо в цьому році вже минув — беремо наступний рік
         if birthday_this_year < today:
-            birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+            birthday_this_year = get_birthday_this_year(
+                birthday_date,
+                today.year + 1
+            )
 
-        # 4) Перевіряємо, чи потрапляє у проміжок "сьогодні ... 7 днів вперед"
         if today <= birthday_this_year <= end_date:
-            congratulation_date = birthday_this_year
+            congratulation_date: date = birthday_this_year
 
-            # 5) Якщо день народження у вихідні — переносимо на понеділок
-            # weekday(): 0=Пн, 5=Сб, 6=Нд
-            if congratulation_date.weekday() == 5:      # субота
+            if congratulation_date.weekday() == 5:
                 congratulation_date += timedelta(days=2)
-            elif congratulation_date.weekday() == 6:    # неділя
+            elif congratulation_date.weekday() == 6:
                 congratulation_date += timedelta(days=1)
 
-            # 6) Додаємо у результат
-            result.append({
-                "name": user["name"],
-                "congratulation_date": congratulation_date.strftime("%Y.%m.%d")
-            })
+            result.append(
+                {
+                    "name": user["name"],
+                    "congratulation_date": congratulation_date.strftime("%Y.%m.%d"),
+                }
+            )
 
     return result
 
 
-# приклад
-users = [
-    {"name": "John Doe", "birthday": "1985.01.23"},
-    {"name": "Jane Smith", "birthday": "1990.01.27"},
-]
+if __name__ == "__main__":
+    users: list[dict[str, str]] = [
+        {"name": "John Doe", "birthday": "1985.01.23"},
+        {"name": "Jane Smith", "birthday": "1990.01.27"},
+    ]
 
-print(get_upcoming_birthdays(users))
+    print(get_upcoming_birthdays(users))
